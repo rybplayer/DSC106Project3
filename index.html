@@ -1,8 +1,31 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>Heart Rate Analysis</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .plot-container {
+            width: 100%;
+            height: 600px;
+        }
+    </style>
+</head>
 <body>
+    <div id="plot" class="plot-container"></div>
+    <script src="plot_data.js"></script>
+    <script>
+        Plotly.newPlot('plot', data, {
+            title: 'Heart Rate Over Time by Student',
+            xaxis: {title: 'Time Point'},
+            yaxis: {title: 'BPM'},
+            showlegend: true,
+            legend: {title: {text: 'Student'}},
+            autosize: true
+        });
 
-<h1>Hello</h1>
-
+        window.addEventListener('resize', function() {
+            Plotly.Plots.resize('plot');
+        });
+    </script>
 </body>
 </html>
