@@ -1,5 +1,5 @@
 body {
-    font: 100%/1.5 system-ui, sans-serif;
+    font-family: 'Georama', system-ui, sans-serif;
     margin: 0;
     padding: 20px;
     min-height: 100vh;
@@ -16,7 +16,7 @@ h1 {
 .plot-container {
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: 10px;
     align-items: center;
     margin-bottom: 40px;
 }
@@ -37,19 +37,105 @@ h1 {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.checkbox-container {
+.checkbox-container, .sorting-container {
     display: flex;
-    flex-direction: row;
-    gap: 20px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: white;
-    justify-content: center;
+    gap: 15px;
+    padding: 8px 12px;
+    background: var(--background-color, #ffffff);
+    border-radius: 8px;
+    margin: 5px 0;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.checkbox-container div {
+.checkbox-container label, .sorting-container label {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.checkbox-container label:hover, .sorting-container label:hover {
+    background-color: var(--hover-color, rgba(0,0,0,0.05));
+}
+
+.checkbox-container input[type="checkbox"], .sorting-container input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-color, #666);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.sorting-container input[type="radio"] {
+    border-radius: 50%;
+}
+
+.checkbox-container input[type="checkbox"]:checked,
+.sorting-container input[type="radio"]:checked {
+    background-color: var(--accent-color, #2196F3);
+    border-color: var(--accent-color, #2196F3);
+}
+
+.checkbox-container input[type="checkbox"]:checked::before {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.sorting-container input[type="radio"]:checked::before {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Dark mode support */
+.dark-mode {
+    --background-color: #2d2d2d;
+    --border-color: #666;
+    --accent-color: #64B5F6;
+    --hover-color: rgba(255,255,255,0.1);
+}
+
+.dark-mode .checkbox-container,
+.dark-mode .sorting-container {
+    color: white;
+}
+
+.dark-mode-toggle {
+    transition: transform 0.3s ease;
+    user-select: none;
+}
+
+.dark-mode-toggle:hover {
+    transform: scale(1.2);
+}
+
+/* Increase tick label size for both plots */
+.x-axis text,
+.y-axis text {
+    font-size: 14px;
+}
+
+.axis-label {
+    font-size: 16px;
+    font-weight: 500;
 }

@@ -1,7 +1,7 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
 export function drawPerson(svg, x, y, student_num) {
-    // Vibrant colors for shirts that work in both modes
+    // Colors for clothing and hat (using same color for both)
     const colors = {
         1: '#FF4B4B',  // bright red
         2: '#4CAF50',  // material green
@@ -16,39 +16,36 @@ export function drawPerson(svg, x, y, student_num) {
     };
 
     const skinTones = {
-        1: '#FAD7B5', // light
-        2: '#F1C27D', // light-medium
-        3: '#E0AC69', // medium
-        4: '#C68642', // medium-dark
-        5: '#8D5524', // dark
-        6: '#FFDBAC', // very light
-        7: '#D2A679', // light-medium
-        8: '#A1665E', // medium-dark
-        9: '#6A4E42', // dark
-        10: '#3B3024' // very dark
+        1: '#FAD7B5',
+        2: '#F1C27D',
+        3: '#E0AC69',
+        4: '#C68642',
+        5: '#8D5524',
+        6: '#FFDBAC',
+        7: '#D2A679',
+        8: '#A1665E',
+        9: '#6A4E42',
+        10: '#3B3024'
     };
 
     const hairColors = {
-        1: '#000000', // black
-        2: '#A52A2A', // brown
-        3: '#FFD700', // blonde
-        4: '#FF0000', // red
-        5: '#808080', // gray
-        6: '#FFFFFF', // white
-        7: '#A52A2A', // auburn
-        8: '#D2691E', // chestnut
-        9: '#654321', // dark brown
-        10: '#D2B48C' // light brown
+        1: '#000000',
+        2: '#A52A2A',
+        3: '#FFD700',
+        4: '#FF0000',
+        5: '#808080',
+        6: '#FFFFFF',
+        7: '#A52A2A',
+        8: '#D2691E',
+        9: '#654321',
+        10: '#D2B48C'
     };
 
     const color = colors[student_num] || '#FF4B4B';
     const skin_color = skinTones[student_num] || 'tan';
     const hair_color = hairColors[student_num] || 'black';
-    const jeans_color = '#1a237e';  // Dark blue jeans color
+    const jeans_color = '#1a237e';
 
-    y = y - 100;
-
-    // Create a group for the person if it doesn't exist
     let personGroup = svg.selectAll(".person-group").data([student_num]);
     personGroup = personGroup.enter()
         .append("g")
@@ -135,7 +132,7 @@ export function drawPerson(svg, x, y, student_num) {
         .append("path")
         .classed("hair", true)
         .attr("d", `M ${x - 20} ${y - 10} Q ${x} ${y - 40}, ${x + 20} ${y - 10} Z`)
-        .attr("fill", hair_color)
+        .attr("fill", color)
         .merge(hair);
 
     // Draw arms
