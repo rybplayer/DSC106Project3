@@ -1,17 +1,18 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-function drawPerson(svg, x, y, student_num) {
+export function drawPerson(svg, x, y, student_num) {
+    // Vibrant colors for shirts that work in both modes
     const colors = {
-        1: 'red',
-        2: 'orange',
-        3: 'black',
-        4: 'green',
-        5: 'blue',
-        6: 'indigo',
-        7: 'violet',
-        8: 'pink',
-        9: 'brown',
-        10: 'gray'
+        1: '#FF4B4B',  // bright red
+        2: '#4CAF50',  // material green
+        3: '#2196F3',  // material blue
+        4: '#FFC107',  // material amber
+        5: '#9C27B0',  // material purple
+        6: '#00BCD4',  // material cyan
+        7: '#E91E63',  // material pink
+        8: '#607D8B',  // material blue grey
+        9: '#FF9800',  // material orange
+        10: '#8BC34A'  // material light green
     };
 
     const skinTones = {
@@ -40,161 +41,241 @@ function drawPerson(svg, x, y, student_num) {
         10: '#D2B48C' // light brown
     };
 
-    const color = colors[student_num] || 'black';
+    const color = colors[student_num] || '#FF4B4B';
     const skin_color = skinTones[student_num] || 'tan';
     const hair_color = hairColors[student_num] || 'black';
+    const jeans_color = '#1a237e';  // Dark blue jeans color
 
     y = y - 100;
 
-    // Draw head
-    svg.append('circle')
-        .attr('cx', x)
-        .attr('cy', y)
-        .attr('r', 20)
-        .attr('fill', skin_color);
+    // Create a group for the person if it doesn't exist
+    let personGroup = svg.selectAll(".person-group").data([student_num]);
+    personGroup = personGroup.enter()
+        .append("g")
+        .classed("person-group", true)
+        .merge(personGroup);
 
-    // Draw eyes
-    svg.append('ellipse')
-        .attr('cx', x - 7)
-        .attr('cy', y - 5)
-        .attr('rx', 4)
-        .attr('ry', 2)
-        .attr('fill', 'white');
+    // Head
+    let head = personGroup.selectAll(".head").data([null]);
+    head.enter()
+        .append("circle")
+        .classed("head", true)
+        .attr("r", 20)
+        .attr("fill", skin_color)
+        .merge(head)
+        .attr("cx", x)
+        .attr("cy", y);
 
-    svg.append('ellipse')
-        .attr('cx', x + 7)
-        .attr('cy', y - 5)
-        .attr('rx', 4)
-        .attr('ry', 2)
-        .attr('fill', 'white');
+    // Eyes
+    let leftEye = personGroup.selectAll(".left-eye-white").data([null]);
+    leftEye.enter()
+        .append("ellipse")
+        .classed("left-eye-white", true)
+        .attr("rx", 4)
+        .attr("ry", 2)
+        .attr("fill", "white")
+        .merge(leftEye)
+        .attr("cx", x - 7)
+        .attr("cy", y - 5);
 
-    svg.append('circle')
-        .attr('cx', x - 7)
-        .attr('cy', y - 5)
-        .attr('r', 1.5)
-        .attr('fill', 'black');
+    let rightEye = personGroup.selectAll(".right-eye-white").data([null]);
+    rightEye.enter()
+        .append("ellipse")
+        .classed("right-eye-white", true)
+        .attr("rx", 4)
+        .attr("ry", 2)
+        .attr("fill", "white")
+        .merge(rightEye)
+        .attr("cx", x + 7)
+        .attr("cy", y - 5);
 
-    svg.append('circle')
-        .attr('cx', x + 7)
-        .attr('cy', y - 5)
-        .attr('r', 1.5)
-        .attr('fill', 'black');
+    let leftPupil = personGroup.selectAll(".left-eye-black").data([null]);
+    leftPupil.enter()
+        .append("circle")
+        .classed("left-eye-black", true)
+        .attr("r", 1.5)
+        .attr("fill", "black")
+        .merge(leftPupil)
+        .attr("cx", x - 7)
+        .attr("cy", y - 5);
+
+    let rightPupil = personGroup.selectAll(".right-eye-black").data([null]);
+    rightPupil.enter()
+        .append("circle")
+        .classed("right-eye-black", true)
+        .attr("r", 1.5)
+        .attr("fill", "black")
+        .merge(rightPupil)
+        .attr("cx", x + 7)
+        .attr("cy", y - 5);
 
     // Draw mouth
-    svg.append('path')
-        .attr('d', `M ${x - 7} ${y + 5} Q ${x} ${y + 15}, ${x + 7} ${y + 5}`)
-        .attr('stroke', 'black')
-        .attr('stroke-width', 2)
-        .attr('fill', 'none');
+    let mouth = personGroup.selectAll(".mouth").data([null]);
+    mouth.enter()
+        .append("path")
+        .classed("mouth", true)
+        .attr("d", `M ${x - 7} ${y + 5} Q ${x} ${y + 15}, ${x + 7} ${y + 5}`)
+        .attr("stroke", "black")
+        .attr("stroke-width", 2)
+        .attr("fill", "none")
+        .merge(mouth);
 
     // Draw nose
-    svg.append('path')
-        .attr('d', `M ${x} ${y} Q ${x - 2} ${y + 10}, ${x + 2} ${y + 5} Z`)
-        .attr('fill', skin_color);
+    let nose = personGroup.selectAll(".nose").data([null]);
+    nose.enter()
+        .append("path")
+        .classed("nose", true)
+        .attr("d", `M ${x} ${y} Q ${x - 2} ${y + 10}, ${x + 2} ${y + 5} Z`)
+        .attr("fill", skin_color)
+        .merge(nose);
 
     // Draw hair
-    svg.append('path')
-        .attr('d', `M ${x - 20} ${y - 10} Q ${x} ${y - 40}, ${x + 20} ${y - 10} Z`)
-        .attr('fill', hair_color);
+    let hair = personGroup.selectAll(".hair").data([null]);
+    hair.enter()
+        .append("path")
+        .classed("hair", true)
+        .attr("d", `M ${x - 20} ${y - 10} Q ${x} ${y - 40}, ${x + 20} ${y - 10} Z`)
+        .attr("fill", hair_color)
+        .merge(hair);
 
     // Draw arms
-    svg.append('line')
-        .attr('x1', x - 10)
-        .attr('y1', y + 20)
-        .attr('x2', x - 20)
-        .attr('y2', y + 60)
-        .attr('stroke', skin_color)
-        .attr('stroke-width', 2);
+    let leftArm = personGroup.selectAll(".left-arm").data([null]);
+    leftArm.enter()
+        .append("line")
+        .classed("left-arm", true)
+        .attr("x1", x - 10)
+        .attr("y1", y + 20)
+        .attr("x2", x - 20)
+        .attr("y2", y + 60)
+        .attr("stroke", skin_color)
+        .attr("stroke-width", 2)
+        .merge(leftArm);
     
-    svg.append('line')
-        .attr('x1', x + 10)
-        .attr('y1', y + 20)
-        .attr('x2', x + 20)
-        .attr('y2', y + 60)
-        .attr('stroke', skin_color)
-        .attr('stroke-width', 2);
+    let rightArm = personGroup.selectAll(".right-arm").data([null]);
+    rightArm.enter()
+        .append("line")
+        .classed("right-arm", true)
+        .attr("x1", x + 10)
+        .attr("y1", y + 20)
+        .attr("x2", x + 20)
+        .attr("y2", y + 60)
+        .attr("stroke", skin_color)
+        .attr("stroke-width", 2)
+        .merge(rightArm);
     
     // Draw sleeves
-    svg.append('line')
-        .attr('x1', x - 10)
-        .attr('y1', y + 20)
-        .attr('x2', x - 12.5)
-        .attr('y2', y + 30)
-        .attr('stroke', color)
-        .attr('stroke-width', 2);
+    let leftSleeve = personGroup.selectAll(".left-sleeve").data([null]);
+    leftSleeve.enter()
+        .append("line")
+        .classed("left-sleeve", true)
+        .attr("x1", x - 10)
+        .attr("y1", y + 20)
+        .attr("x2", x - 12.5)
+        .attr("y2", y + 30)
+        .attr("stroke", color)
+        .attr("stroke-width", 2)
+        .merge(leftSleeve);
     
-    svg.append('line')
-        .attr('x1', x + 10)
-        .attr('y1', y + 20)
-        .attr('x2', x + 12.5)
-        .attr('y2', y + 30)
-        .attr('stroke', color)
-        .attr('stroke-width', 2);        
-
+    let rightSleeve = personGroup.selectAll(".right-sleeve").data([null]);
+    rightSleeve.enter()
+        .append("line")
+        .classed("right-sleeve", true)
+        .attr("x1", x + 10)
+        .attr("y1", y + 20)
+        .attr("x2", x + 12.5)
+        .attr("y2", y + 30)
+        .attr("stroke", color)
+        .attr("stroke-width", 2)
+        .merge(rightSleeve);
+        
     // Draw body
-    svg.append('rect')
-        .attr('x', x - 10)
-        .attr('y', y + 20)
-        .attr('width', 20)
-        .attr('height', 50)
-        .attr('fill', color);
+    let body = personGroup.selectAll(".body").data([null]);
+    body.enter()
+        .append("rect")
+        .classed("body", true)
+        .attr("width", 20)
+        .attr("height", 50)
+        .attr("fill", color)
+        .merge(body)
+        .attr("x", x - 10)
+        .attr("y", y + 20);
     
     // Draw shorts
-    svg.append('rect')
-        .attr('x', x - 10)
-        .attr('y', y + 60)
-        .attr('width', 20)
-        .attr('height', 10)
-        .attr('fill', 'black');    
+    let shorts = personGroup.selectAll(".shorts").data([null]);
+    shorts.enter()
+        .append("rect")
+        .classed("shorts", true)
+        .attr("x", x - 10)
+        .attr("y", y + 60)
+        .attr("width", 20)
+        .attr("height", 10)
+        .attr("fill", jeans_color)
+        .merge(shorts);
 
-    // Draw student number
-    svg.append('text')
-        .attr('x', x)
-        .attr('y', y + 50)
-        .attr('text-anchor', 'middle')
-        .attr('fill', 'white')
-        .text(student_num);
+    // Student number
+    let number = personGroup.selectAll(".number").data([null]);
+    number.enter()
+        .append("text")
+        .classed("number", true)
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .text(student_num)
+        .merge(number)
+        .attr("x", x)
+        .attr("y", y + 50);
 
     // Draw legs
-    svg.append('line')
-        .attr('x1', x - 10)
-        .attr('y1', y + 70)
-        .attr('x2', x - 15)
-        .attr('y2', y + 100)
-        .attr('stroke', 'black')
-        .attr('stroke-width', 2);
+    let leftLeg = personGroup.selectAll(".left-leg").data([null]);
+    leftLeg.enter()
+        .append("line")
+        .classed("left-leg", true)
+        .attr("x1", x - 10)
+        .attr("y1", y + 70)
+        .attr("x2", x - 15)
+        .attr("y2", y + 100)
+        .attr("stroke", jeans_color)
+        .attr("stroke-width", 3)
+        .merge(leftLeg);
 
-    svg.append('line')
-        .attr('x1', x + 10)
-        .attr('y1', y + 70)
-        .attr('x2', x + 15)
-        .attr('y2', y + 100)
-        .attr('stroke', 'black')
-        .attr('stroke-width', 2);
+    let rightLeg = personGroup.selectAll(".right-leg").data([null]);
+    rightLeg.enter()
+        .append("line")
+        .classed("right-leg", true)
+        .attr("x1", x + 10)
+        .attr("y1", y + 70)
+        .attr("x2", x + 15)
+        .attr("y2", y + 100)
+        .attr("stroke", jeans_color)
+        .attr("stroke-width", 3)
+        .merge(rightLeg);
 
     // Draw shoes
-    svg.append('line')
-        .attr('x1', x - 14)
-        .attr('y1', y + 95)
-        .attr('x2', x - 15)
-        .attr('y2', y + 100)
-        .attr('stroke', color)
-        .attr('stroke-width', 2);
+    let leftFoot = personGroup.selectAll(".left-foot").data([null]);
+    leftFoot.enter()
+        .append("line")
+        .classed("left-foot", true)
+        .attr("x1", x - 14)
+        .attr("y1", y + 95)
+        .attr("x2", x - 15)
+        .attr("y2", y + 100)
+        .attr("stroke", color)
+        .attr("stroke-width", 2)
+        .merge(leftFoot);
 
-    svg.append('line')
-        .attr('x1', x + 14)
-        .attr('y1', y + 95)
-        .attr('x2', x + 15)
-        .attr('y2', y + 100)
-        .attr('stroke', color)
-        .attr('stroke-width', 2);   
+    let rightFoot = personGroup.selectAll(".right-foot").data([null]);
+    rightFoot.enter()
+        .append("line")
+        .classed("right-foot", true)
+        .attr("x1", x + 14)
+        .attr("y1", y + 95)
+        .attr("x2", x + 15)
+        .attr("y2", y + 100)
+        .attr("stroke", color)
+        .attr("stroke-width", 2)
+        .merge(rightFoot);
+
+    return personGroup;
 }
 
-// Example usage
-const svg = d3.select('body').append('svg')
-    .attr('width', 600)
-    .attr('height', 500);
-
-for (let i = 1; i <= 10; i++) {
-    drawPerson(svg, 50 * i, 200, i);
-}
+// Remove example usage
+// const svg = d3.select('body')...

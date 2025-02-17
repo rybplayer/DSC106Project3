@@ -1,0 +1,31 @@
+Student,Exam,Score,0
+S1,Final,91.0,23388
+S1,Midterm 1,78.0,11170
+S1,Midterm 2,82.0,11128
+S10,Final,58.0,23065
+S10,Midterm 1,89.0,11679
+S10,Midterm 2,64.0,12983
+S2,Final,90.0,25328
+S2,Midterm 1,82.0,11976
+S2,Midterm 2,85.0,13876
+S3,Final,94.0,25813
+S3,Midterm 1,77.0,12204
+S3,Midterm 2,90.0,10236
+S4,Final,74.5,15908
+S4,Midterm 1,75.0,11685
+S4,Midterm 2,77.0,13384
+S5,Final,78.5,15241
+S5,Midterm 1,67.0,11993
+S5,Midterm 2,77.0,12008
+S6,Final,87.5,23913
+S6,Midterm 1,71.0,11145
+S6,Midterm 2,64.0,14182
+S7,Final,55.0,19640
+S7,Midterm 1,64.0,12375
+S7,Midterm 2,33.0,10805
+S8,Final,92.0,17888
+S8,Midterm 1,92.0,10772
+S8,Midterm 2,88.0,9953
+S9,Final,63.0,14198
+S9,Midterm 1,80.0,12673
+S9,Midterm 2,39.0,12423
