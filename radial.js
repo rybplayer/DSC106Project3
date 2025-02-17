@@ -30,27 +30,40 @@ const EXAM_COLORS = {
 // Replace the old colors array
 const colors = [EXAM_COLORS["Midterm 1"], EXAM_COLORS["Midterm 2"], EXAM_COLORS["Final"]];
 
-// Create SVG containers
-const stackedSvg = d3.select("#plot")
+// Update the plot container structure
+const plotContainer = d3.select("#plot");
+
+// Create separate containers for each plot and controls
+const visualizationContainer = plotContainer.append("div")
+    .attr("class", "visualization-container");
+
+const stackedContainer = visualizationContainer.append("div")
+    .attr("class", "stacked-container");
+
+const scatterContainer = visualizationContainer.append("div")
+    .attr("class", "scatter-container");
+
+// Create controls container below the plots
+const controlsContainer = plotContainer.append("div")
+    .attr("class", "controls-container");
+
+// Create SVGs in their containers
+const stackedSvg = stackedContainer
     .append("svg")
     .attr("width", width + margin1.left + margin1.right)
     .attr("height", height + margin1.top + margin1.bottom)
     .append("g")
     .attr("transform", `translate(${margin1.left},${margin1.top})`);
 
-const scatterSvg = d3.select("#plot")
+const scatterSvg = scatterContainer
     .append("svg")
     .attr("width", width + margin2.left + margin2.right)
     .attr("height", height + margin2.top + margin2.bottom)
     .append("g")
     .attr("transform", `translate(${margin2.left},${margin2.top})`);
 
-// Create groups for bars and people
-const barsGroup = stackedSvg.append("g").attr("class", "bars");
-const peopleGroup = stackedSvg.append("g").attr("class", "people");
-
-// Create checkbox container as horizontal bar
-const checkboxDiv = d3.select("#plot")
+// Create checkbox container
+const checkboxDiv = controlsContainer
     .append("div")
     .attr("class", "checkbox-container");
 
@@ -73,8 +86,8 @@ darkModeToggle.html(`
     <label class="switch">
         <input type="checkbox">
         <span class="slider">
-            <span class="sun">☀️</span>
             <span class="moon">🌙</span>
+            <span class="sun">☀️</span>
         </span>
     </label>
 `);
@@ -114,6 +127,10 @@ function toggleDarkMode() {
     d3.select(".sorting-container")
         .style("background-color", isDarkMode ? "#2d2d2d" : "white")
         .style("border-color", isDarkMode ? "#404040" : "#ddd");
+
+    // Update scatter plot labels
+    scatterSvg.selectAll("text")
+        .style("fill", isDarkMode ? "white" : "black");
 }
 
 function updateVisualizations() {
@@ -200,6 +217,27 @@ function processData(sizeData, bpmData) {
 }
 
 function updateStackedBarChart(studentTotals, sortedStudents) {
+    if (selectedExams.size === 0) {
+        // Fade out only bars and people
+        stackedSvg.selectAll(".student-group")
+            .transition()
+            .duration(500)
+            .style("opacity", 0);
+            
+        stackedSvg.selectAll(".person-group")
+            .transition()
+            .duration(500)
+            .style("opacity", 0);
+            
+        return;
+    }
+    
+    // Reset opacity for bars and people
+    stackedSvg.selectAll(".student-group")
+        .style("opacity", 1);
+    stackedSvg.selectAll(".person-group")
+        .style("opacity", 1);
+    
     // Set up scales
     const xScale = d3.scaleBand()
         .domain(sortedStudents)
@@ -218,7 +256,7 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
     });
 
     // Update bars
-    const studentGroups = barsGroup.selectAll(".student-group")
+    const studentGroups = stackedSvg.selectAll(".student-group")
         .data(sortedStudents, d => d);
 
     // Exit old bars
@@ -304,7 +342,7 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
     allGroups.call(updateBars);
 
     // Update people
-    const people = peopleGroup.selectAll(".person-group")
+    const people = stackedSvg.selectAll(".person-group")
         .data(sortedStudents, d => d);
 
     // Remove old people
@@ -383,6 +421,19 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
 
 // Update scatter plot with animations and labels
 function updateScatterPlot(studentTotals, bpmMeans) {
+    if (selectedExams.size === 0) {
+        // Fade out only points and best fit line
+        scatterSvg.selectAll(".point-group, .best-fit")
+            .transition()
+            .duration(500)
+            .style("opacity", 0);
+        return;
+    }
+    
+    // Reset opacity for points and best fit line
+    scatterSvg.selectAll(".point-group, .best-fit")
+        .style("opacity", 1);
+        
     // Calculate data
     const scatterData = Array.from(studentTotals.entries()).map(([student, scoreData]) => {
         const studentBPMs = bpmMeans.get(student);
@@ -488,13 +539,27 @@ function updateScatterPlot(studentTotals, bpmMeans) {
     // Add points for new elements
     pointsEnter.append("circle")
         .attr("r", 6)
-        .attr("fill", d => shirtColors[d.studentNum]);
+        .attr("fill", d => shirtColors[d.studentNum])
+        .on("mouseover", function(event, d) {
+            tooltip.style("opacity", 1)
+                .html(`Score: ${d.totalScore.toFixed(1)}<br>BPM: ${d.avgBPM.toFixed(1)}`)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px");
+        })
+        .on("mouseout", function() {
+            tooltip.style("opacity", 0);
+        })
+        .on("mousemove", function(event) {
+            tooltip.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px");
+        });
 
-    // Add labels for new elements
+    // Update the scatter plot point labels
     pointsEnter.append("text")
         .attr("dy", -8)
         .style("text-anchor", "middle")
         .style("font-size", "12px")
+        .style("fill", isDarkMode ? "white" : "black")
         .text(d => d.student);
 
     // Update all points and their ranges with transitions
@@ -560,10 +625,9 @@ function updateScatterPlot(studentTotals, bpmMeans) {
 }
 
 // Add radio button container below exam checkboxes
-const sortingDiv = d3.select("#plot")
+const sortingDiv = controlsContainer
     .append("div")
-    .attr("class", "sorting-container")
-    .style("margin-top", "10px");
+    .attr("class", "sorting-container");
 
 // Add radio buttons
 const sortOptions = ["Sort by Score", "Sort by BPM"];
