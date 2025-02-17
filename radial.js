@@ -43,7 +43,7 @@ const stackedContainer = visualizationContainer.append("div")
 const scatterContainer = visualizationContainer.append("div")
     .attr("class", "scatter-container");
 
-// Create controls container below the plots
+// Create controls container
 const controlsContainer = plotContainer.append("div")
     .attr("class", "controls-container");
 
@@ -62,10 +62,52 @@ const scatterSvg = scatterContainer
     .append("g")
     .attr("transform", `translate(${margin2.left},${margin2.top})`);
 
-// Create checkbox container
-const checkboxDiv = controlsContainer
+// Create checkbox container with label
+const checkboxContainer = controlsContainer.append("div")
+    .attr("class", "control-group");
+
+checkboxContainer.append("div")
+    .attr("class", "control-label")
+    .text("Exam Selection");
+
+const checkboxDiv = checkboxContainer
     .append("div")
     .attr("class", "checkbox-container");
+
+// Create sorting container with label
+const sortingContainer = controlsContainer.append("div")
+    .attr("class", "control-group");
+
+sortingContainer.append("div")
+    .attr("class", "control-label")
+    .text("Sort Decreasing");
+
+const sortingDiv = sortingContainer
+    .append("div")
+    .attr("class", "sorting-container");
+
+// Update sort options and add them to sortingDiv
+const sortOptions = ["Sort by Score", "Sort by Average BPM"];
+sortingDiv.selectAll("div")
+    .data(sortOptions)
+    .enter()
+    .append("div")
+    .each(function(d, i) {
+        const container = d3.select(this);
+        container.append("input")
+            .attr("type", "radio")
+            .attr("id", d.replace(/\s+/g, ''))
+            .attr("name", "sorting")
+            .attr("value", d)
+            .attr("checked", i === 0 ? true : null)
+            .on("change", function() {
+                updateSorting(this.value);
+            });
+        
+        container.append("label")
+            .attr("for", d.replace(/\s+/g, ''))
+            .text(d);
+    });
 
 // Add checkboxes
 const exams = ["Midterm 1", "Midterm 2", "Final"];
@@ -623,34 +665,6 @@ function updateScatterPlot(studentTotals, bpmMeans) {
             .attr("y2", d => yScale(d[1].y));
     }
 }
-
-// Add radio button container below exam checkboxes
-const sortingDiv = controlsContainer
-    .append("div")
-    .attr("class", "sorting-container");
-
-// Add radio buttons
-const sortOptions = ["Sort by Score", "Sort by BPM"];
-sortingDiv.selectAll("div")
-    .data(sortOptions)
-    .enter()
-    .append("div")
-    .each(function(d, i) {
-        const container = d3.select(this);
-        container.append("input")
-            .attr("type", "radio")
-            .attr("id", d.replace(/\s+/g, ''))
-            .attr("name", "sorting")
-            .attr("value", d)
-            .attr("checked", i === 0 ? true : null)
-            .on("change", function() {
-                updateSorting(this.value);
-            });
-        
-        container.append("label")
-            .attr("for", d.replace(/\s+/g, ''))
-            .text(d);
-    });
 
 // Add sorting function
 function updateSorting(sortType) {

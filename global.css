@@ -57,7 +57,6 @@ h1 {
     margin: 5px 0;
     align-items: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: background-color 1s ease, border-color 1s ease, color 1s ease;
 }
 
 .checkbox-container label, .sorting-container label {
@@ -266,4 +265,38 @@ rect.background {
     gap: 10px;
     align-items: center;
     margin-top: 20px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.control-label {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--text-color, black);
+    transition: color 1s ease;
+}
+
+.dark-mode .control-label {
+    color: white;
+}
+
+/* Update the universal transition to use linear timing */
+* {
+    transition: all 1s linear !important;
+}
+
+/* Keep the specific radio label styling */
+.sorting-container label {
+    transition: none !important;
+    color: var(--text-color, black);
+}
+
+.dark-mode .sorting-container label {
+    color: white;
 }
