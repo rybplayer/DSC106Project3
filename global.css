@@ -2,7 +2,7 @@ body {
     font-family: 'Georama', system-ui, sans-serif;
     margin: 0;
     padding: 20px;
-    min-height: 100vh;
+    min-height: 80vh;
     display: flex;
     flex-direction: column;
     align-items: center;
