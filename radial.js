@@ -332,26 +332,20 @@ function processData(sizeData, bpmData) {
 
 function updateStackedBarChart(studentTotals, sortedStudents) {
     if (selectedExams.size === 0) {
-        // Fade out only bars and people
-        stackedSvg.selectAll(".student-group")
+        // Fade out bars, people, and hitboxes
+        stackedSvg.selectAll(".student-group, .person-group, .person-hitbox")
             .transition()
             .duration(1000)
-            .style("opacity", 0);
-            
-        stackedSvg.selectAll(".person-group")
-            .transition()
-            .duration(1000)
-            .style("opacity", 0);
+            .style("opacity", 0)
+            .remove();  // Remove elements after fade
             
         return;
     }
     
-    // Reset opacity for bars and people
-    stackedSvg.selectAll(".student-group")
+    // Reset opacity for all elements
+    stackedSvg.selectAll(".student-group, .person-group")
         .style("opacity", 1);
-    stackedSvg.selectAll(".person-group")
-        .style("opacity", 1);
-    
+
     // Set up scales
     const xScale = d3.scaleBand()
         .domain(sortedStudents)
@@ -482,6 +476,9 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
     // Update all people with transition
     const allPeople = peopleEnter.merge(people);
     
+    // Remove old hitboxes first
+    allPeople.selectAll(".person-hitbox").remove();
+    
     // Transition to final position
     allPeople
         .transition()
@@ -495,47 +492,42 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
         .on("end", function(d) {
             const studentNum = parseInt(d.replace('S', ''));
             drawPerson(d3.select(this), 0, 0, studentNum);
+            
+            // Add new hitbox after transition
+            const group = d3.select(this);
+            const student = d;
+            const studentBPMs = processedData.bpmMeans.get(student);
+            const selectedBPMs = Array.from(selectedExams)
+                .map(exam => studentBPMs.get(exam))
+                .filter(bpm => bpm !== undefined);
+            const avgBPM = d3.mean(selectedBPMs) || 0;
+
+            group.append("rect")
+                .attr("class", "person-hitbox")
+                .attr("x", -20)
+                .attr("y", -40)
+                .attr("width", 40)
+                .attr("height", 140)
+                .attr("fill", "transparent")
+                .style("pointer-events", "all")
+                .on("mouseover", function(event) {
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html(`Average BPM: ${avgBPM.toFixed(1)}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function() {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                })
+                .on("mousemove", function(event) {
+                    tooltip.style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                });
         });
-
-    // After drawing people, add invisible hitboxes
-    allPeople.each(function(student) {
-        const group = d3.select(this);
-        const studentData = studentTotals.get(student);
-        
-        // Calculate average BPM for selected exams
-        const studentBPMs = processedData.bpmMeans.get(student);
-        const selectedBPMs = Array.from(selectedExams)
-            .map(exam => studentBPMs.get(exam))
-            .filter(bpm => bpm !== undefined);
-        const avgBPM = d3.mean(selectedBPMs) || 0;
-
-        // Add invisible rectangle for tooltip
-        group.append("rect")
-            .attr("class", "person-hitbox")
-            .attr("x", -20)  // Slightly wider than the person
-            .attr("y", -40)  // Slightly higher than the person
-            .attr("width", 40)  // Cover the full width of person
-            .attr("height", 140)  // Cover the full height of person
-            .attr("fill", "transparent")  // Make it invisible
-            .style("pointer-events", "all")  // But still catch mouse events
-            .on("mouseover", function(event) {
-                tooltip.transition()
-                    .duration(200)
-                    .style("opacity", .9);
-                tooltip.html(`Average BPM: ${avgBPM.toFixed(1)}`)
-                    .style("left", (event.pageX + 10) + "px")
-                    .style("top", (event.pageY - 28) + "px");
-            })
-            .on("mouseout", function() {
-                tooltip.transition()
-                    .duration(500)
-                    .style("opacity", 0);
-            })
-            .on("mousemove", function(event) {
-                tooltip.style("left", (event.pageX + 10) + "px")
-                    .style("top", (event.pageY - 28) + "px");
-            });
-    });
 
     // Update axes with larger font and labels
     stackedSvg.selectAll(".axis").remove();
