@@ -223,11 +223,13 @@ function checkExamCombination() {
             .attr("class", "completion-container");
 
         messageDiv.html(`
-            <p>Did you find any significant results?</p>
+            
             <div class="reflection-questions">
-                <p><strong>Key Questions:</strong></p>
+                <p>It seems we didn't find any significant results. Why could this be?</p>
+                <p>Key Questions:</p>
                 <ul>
                     <li>Which exam combinations showed the strongest BPM-grade correlation?</li>
+                    <li>The range of p-values was huge. Why could this be?</li>
                     <li>Was heart rate a good predictor of scores?</li>
                     <li>What other health factors might be better predictors of exam scores?</li>
                 </ul>
@@ -269,7 +271,7 @@ function updateVisualizations() {
 
     // Update both visualizations
     updateStackedBarChart(studentTotals, sortedStudents);
-    updateScatterPlot(studentTotals, processedData.bpmMeans);
+    updateScatterPlot(studentTotals, processedData.bpmDataGrouped);
     
     checkExamCombination();
 }
@@ -309,13 +311,14 @@ Promise.all([
     d3.csv("data/csv/bpm.csv")
 ]).then(([sizeData, bpmData]) => {
     processedData = processData(sizeData, bpmData);
+    console.log(processedData);
     updateVisualizations();
 }).catch(error => console.error("Error loading data:", error));
 
 function processData(sizeData, bpmData) {
-    // Group BPM data by Student and Exam to calculate means
-    const bpmMeans = d3.rollup(bpmData,
-        v => d3.mean(v, d => +d.BPM),
+    // Group BPM data by Student and Exam to store all BPM values
+    const bpmDataGrouped = d3.rollup(bpmData,
+        v => v.map(d => +d.BPM),  // Store all BPM values as an array
         d => d.Student,
         d => d.Exam
     );
@@ -327,7 +330,7 @@ function processData(sizeData, bpmData) {
         Score: +d.Score
     }));
 
-    return { bpmMeans, scoreData };
+    return { bpmDataGrouped, scoreData };
 }
 
 function updateStackedBarChart(studentTotals, sortedStudents) {
@@ -496,7 +499,7 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
             // Add new hitbox after transition
             const group = d3.select(this);
             const student = d;
-            const studentBPMs = processedData.bpmMeans.get(student);
+            const studentBPMs = processedData.bpmDataGrouped.get(student);
             const selectedBPMs = Array.from(selectedExams)
                 .map(exam => studentBPMs.get(exam))
                 .filter(bpm => bpm !== undefined);
@@ -510,7 +513,14 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
                 .attr("height", 140)
                 .attr("fill", "transparent")
                 .style("pointer-events", "all")
-                .on("mouseover", function(event) {
+                .on("mouseover", function(event, d) {
+                    const studentBPMs = processedData.bpmDataGrouped.get(d);
+                    const selectedBPMs = Array.from(selectedExams)
+                        .flatMap(exam => studentBPMs.get(exam) || [])
+                        .filter(bpm => bpm !== undefined);
+                    
+                    const avgBPM = d3.mean(selectedBPMs) || 0;
+
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", .9);
@@ -598,7 +608,7 @@ recordStats.append("div").attr("class", "stat-item r2-records");
 recordStats.append("div").attr("class", "stat-item p-records");
 
 // Update the updateScatterPlot function to include new statistics
-function updateScatterPlot(studentTotals, bpmMeans) {
+function updateScatterPlot(studentTotals, bpmDataGrouped) {
     if (selectedExams.size === 0) {
         // Fade out only points and best fit line
         scatterSvg.selectAll(".point-group, .best-fit")
@@ -612,23 +622,44 @@ function updateScatterPlot(studentTotals, bpmMeans) {
     scatterSvg.selectAll(".point-group, .best-fit")
         .style("opacity", 1);
         
-    // Calculate data
+    // Define xScale with a fixed domain from 0 to 300
+    const xScale = d3.scaleLinear()
+        .domain([0, 300])
+        .range([0, width]);
+
+    // Reuse the filtered data from the first plot
     const scatterData = Array.from(studentTotals.entries()).map(([student, scoreData]) => {
-        const studentBPMs = bpmMeans.get(student);
+        const studentBPMs = bpmDataGrouped.get(student);
         const selectedBPMs = Array.from(selectedExams)
-            .map(exam => studentBPMs.get(exam))
-            .filter(bpm => bpm !== undefined);
+            .flatMap(exam => studentBPMs.get(exam) || []);  // Flatten to get all BPMs
+
+        if (selectedBPMs.length === 0) {
+            console.warn(`No BPM data for student ${student} with selected exams:`, selectedExams);
+            return null; // Skip this student if no BPM data is available
+        }
+
+        const avgBPM = d3.mean(selectedBPMs);
+        const minBPM = d3.min(selectedBPMs);
+        const maxBPM = d3.max(selectedBPMs);
+        const q1BPM = d3.quantile(selectedBPMs, 0.25);
+        const q3BPM = d3.quantile(selectedBPMs, 0.75);
 
         return {
             student: student,
             studentNum: parseInt(student.replace('S', '')),
-            avgBPM: d3.mean(selectedBPMs) || 0,
+            avgBPM: avgBPM,
             totalScore: scoreData.total,
             bpmValues: selectedBPMs,
-            minBPM: d3.min(selectedBPMs),
-            maxBPM: d3.max(selectedBPMs)
+            minBPM: minBPM,
+            maxBPM: maxBPM,
+            q1BPM: q1BPM,
+            q3BPM: q3BPM,
+            examScores: scoreData.scores,
+            examBPMs: Object.fromEntries(
+                Array.from(selectedExams).map(exam => [exam, studentBPMs.get(exam)])
+            )
         };
-    }).filter(d => d.avgBPM > 0);
+    }).filter(d => d !== null);
 
     // Get shirt colors from the colors object defined in person.js
     const shirtColors = {
@@ -644,20 +675,16 @@ function updateScatterPlot(studentTotals, bpmMeans) {
         10: '#8BC34A'  // material light green
     };
 
-    // Set up scales
-    const xScale = d3.scaleLinear()
-        .domain([0, 300])
-        .range([0, width]);
-
+    // Calculate the y-axis domain based on IQR
     const allBPMs = scatterData.flatMap(d => d.bpmValues);
-    const bpmQ1 = d3.quantile(allBPMs, 0.25);
-    const bpmQ3 = d3.quantile(allBPMs, 0.75);
-    const bpmIQR = bpmQ3 - bpmQ1;
-    const bpmMin = Math.max(0, bpmQ1 - 2 * bpmIQR);  // Increased from 1.5 to 2
-    const bpmMax = bpmQ3 + 2 * bpmIQR;  // Increased from 1.5 to 2
+    const q1Overall = d3.quantile(allBPMs, 0.25);
+    const q3Overall = d3.quantile(allBPMs, 0.75);
+    const iqrOverall = q3Overall - q1Overall;
+    const yMin = Math.max(0, q1Overall - 1.05 * iqrOverall);
+    const yMax = q3Overall + 0.5 * iqrOverall;
 
     const yScale = d3.scaleLinear()
-        .domain([bpmMin * 0.95, bpmMax * 1.05])
+        .domain([yMin, yMax])
         .range([height, 0]);
 
     // Update axes with larger font
@@ -707,20 +734,47 @@ function updateScatterPlot(studentTotals, bpmMeans) {
         .attr("class", "point-group")
         .attr("transform", d => `translate(${xScale(d.totalScore)},${yScale(d.avgBPM)})`);
 
-    // Add IQR ranges for new points
+    // Update the IQR range lines
     pointsEnter.append("line")
         .attr("class", "bpm-range")
+        .attr("x1", 0)
+        .attr("x2", 0)
+        .attr("y1", d => yScale(d.q3BPM) - yScale(d.avgBPM))
+        .attr("y2", d => yScale(d.q1BPM) - yScale(d.avgBPM))
         .style("stroke", d => shirtColors[d.studentNum])
         .style("stroke-width", 2)
         .style("opacity", 0.5);
 
-    // Add points for new elements
+    // Add points with updated tooltip
     pointsEnter.append("circle")
         .attr("r", 6)
         .attr("fill", d => shirtColors[d.studentNum])
         .on("mouseover", function(event, d) {
+            // Calculate the total score and IQR based on selected exams
+            const selectedScores = Array.from(selectedExams)
+                .map(exam => d.examScores[exam])
+                .filter(score => score !== undefined);
+            
+            const totalScore = d3.sum(selectedScores);
+            
+            const selectedBPMs = Array.from(selectedExams)
+                .flatMap(exam => d.examBPMs[exam] || [])
+                .filter(bpm => bpm !== undefined);
+            
+            const avgBPM = d3.mean(selectedBPMs);
+            const q1BPM = d3.quantile(selectedBPMs, 0.25);
+            const q3BPM = d3.quantile(selectedBPMs, 0.75);
+
+            // Update tooltip content to show IQR
+            const tooltipContent = `
+                Student: ${d.student}<br>
+                Total Score: ${totalScore.toFixed(1)}<br>
+                Average BPM: ${avgBPM.toFixed(1)}<br>
+                BPM IQR: ${q1BPM.toFixed(1)} - ${q3BPM.toFixed(1)}
+            `;
+
             tooltip.style("opacity", 1)
-                .html(`Score: ${d.totalScore.toFixed(1)}<br>BPM: ${d.avgBPM.toFixed(1)}`)
+                .html(tooltipContent)
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 10) + "px");
         })
@@ -747,15 +801,6 @@ function updateScatterPlot(studentTotals, bpmMeans) {
     allPoints.transition()
         .duration(1000)
         .attr("transform", d => `translate(${xScale(d.totalScore)},${yScale(d.avgBPM)})`);
-
-    // Transition the IQR ranges
-    allPoints.select(".bpm-range")
-        .transition()
-        .duration(1000)
-        .attr("x1", 0)
-        .attr("x2", 0)
-        .attr("y1", d => yScale(d.minBPM) - yScale(d.avgBPM))
-        .attr("y2", d => yScale(d.maxBPM) - yScale(d.avgBPM));
 
     // Update regression statistics
     if (scatterData.length > 1) {
@@ -857,11 +902,11 @@ function updateSorting(sortType) {
             .sort((a, b) => b[1].total - a[1].total)
             .map(d => d[0]);
     } else {
-        // For BPM sorting, use the bpmMeans from processedData
+        // For BPM sorting, use the bpmDataGrouped from processedData
         sortedStudents = Array.from(studentTotals.entries())
             .sort((a, b) => {
-                const bpmA = d3.mean(Array.from(processedData.bpmMeans.get(a[0]).values())) || 0;
-                const bpmB = d3.mean(Array.from(processedData.bpmMeans.get(b[0]).values())) || 0;
+                const bpmA = d3.mean(Array.from(processedData.bpmDataGrouped.get(a[0]).values())) || 0;
+                const bpmB = d3.mean(Array.from(processedData.bpmDataGrouped.get(b[0]).values())) || 0;
                 return bpmB - bpmA;
             })
             .map(d => d[0]);
@@ -869,5 +914,5 @@ function updateSorting(sortType) {
 
     // Update visualizations with new sorting
     updateStackedBarChart(studentTotals, sortedStudents);
-    updateScatterPlot(studentTotals, processedData.bpmMeans);
+    updateScatterPlot(studentTotals, processedData.bpmDataGrouped);
 }
