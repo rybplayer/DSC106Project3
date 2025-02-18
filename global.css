@@ -401,3 +401,14 @@ rect.background {
 .dark-mode .reflection-questions li {
     color: var(--text-color, #fff);
 }
+
+/* Link color in light mode */
+a {
+    color: #007BFF; /* Brighter blue for light mode */
+    transition: color 1s ease; /* Ensure smooth transition */
+}
+
+/* Link color in dark mode */
+.dark-mode a {
+    color: #1E90FF; /* Brighter blue for dark mode */
+}
