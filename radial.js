@@ -68,7 +68,7 @@ const checkboxContainer = controlsContainer.append("div")
 
 checkboxContainer.append("div")
     .attr("class", "control-label")
-    .text("Exam Selection");
+    .text("Exam selection");
 
 const checkboxDiv = checkboxContainer
     .append("div")
@@ -80,7 +80,7 @@ const sortingContainer = controlsContainer.append("div")
 
 sortingContainer.append("div")
     .attr("class", "control-label")
-    .text("Sort Decreasing");
+    .text("Sort options (decreasing order)");
 
 const sortingDiv = sortingContainer
     .append("div")
@@ -175,8 +175,78 @@ function toggleDarkMode() {
         .style("fill", isDarkMode ? "white" : "black");
 }
 
+// Add near top with other global variables
+let seenCombinations = new Set();
+const allPossibleCombinations = 7; // 1,2,3,12,13,23,123
+
+// Add this function to check combinations
+function checkExamCombination() {
+    const currentCombo = Array.from(selectedExams).sort().join('');
+    seenCombinations.add(currentCombo);
+    
+    if (seenCombinations.size === allPossibleCombinations && !document.querySelector('.completion-message')) {
+        // Trigger confetti
+        const duration = 3000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+        const interval = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            const particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, {
+                particleCount,
+                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+            }));
+            confetti(Object.assign({}, defaults, {
+                particleCount,
+                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+            }));
+        }, 250);
+
+        // Add completion message
+        const completionContainer = controlsContainer.append("div")
+            .attr("class", "control-group completion-message")
+            .style("opacity", 0);
+
+        completionContainer.append("div")
+            .attr("class", "control-label")
+            .text("You've seen all exam combinations!");
+
+        const messageDiv = completionContainer.append("div")
+            .attr("class", "completion-container");
+
+        messageDiv.html(`
+            <p>Did you find any significant results?</p>
+            <div class="reflection-questions">
+                <p><strong>Key Questions:</strong></p>
+                <ul>
+                    <li>Which exam combinations showed the strongest BPM-grade correlation?</li>
+                    <li>Was heart rate a good predictor of scores?</li>
+                    <li>What other health factors might be better predictors of exam scores?</li>
+                </ul>
+            </div>
+        `);
+
+        // Fade in the message
+        completionContainer.transition()
+            .duration(1000)
+            .style("opacity", 1);
+    }
+}
+
 function updateVisualizations() {
     if (!processedData) return;
+    
+    // Stop any ongoing transitions
+    scatterSvg.selectAll("*").interrupt();
+    stackedSvg.selectAll("*").interrupt();
     
     console.log("Updating visualizations with exams:", selectedExams);
     // Filter data based on selected exams
@@ -200,6 +270,8 @@ function updateVisualizations() {
     // Update both visualizations
     updateStackedBarChart(studentTotals, sortedStudents);
     updateScatterPlot(studentTotals, processedData.bpmMeans);
+    
+    checkExamCombination();
 }
 
 checkboxDiv.selectAll("div")
@@ -263,12 +335,12 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
         // Fade out only bars and people
         stackedSvg.selectAll(".student-group")
             .transition()
-            .duration(500)
+            .duration(1000)
             .style("opacity", 0);
             
         stackedSvg.selectAll(".person-group")
             .transition()
-            .duration(500)
+            .duration(1000)
             .style("opacity", 0);
             
         return;
@@ -304,7 +376,7 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
     // Exit old bars
     studentGroups.exit()
         .transition()
-        .duration(5000)
+        .duration(1000)
         .attr("transform", d => `translate(${xScale(d)},0)`)
         .remove();
 
@@ -330,7 +402,7 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
             // Remove old bars
             bars.exit()
                 .transition()
-                .duration(5000)
+                .duration(1000)
                 .attr("height", 0)
                 .attr("y", height)
                 .remove();
@@ -360,7 +432,7 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
                         .style("opacity", 0);
                 })
                 .transition()
-                .duration(5000)
+                .duration(1000)
                 .attr("width", xScale.bandwidth())
                 .attr("y", (d, i) => {
                     const score = studentData.scores[d] || 0;
@@ -377,7 +449,7 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
 
     // First transition: Move to correct x positions
     allGroups.transition()
-        .duration(5000)
+        .duration(1000)
         .attr("transform", d => `translate(${xScale(d)},0)`);
     
     // Update the bars
@@ -390,7 +462,7 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
     // Remove old people
     people.exit()
         .transition()
-        .duration(5000)
+        .duration(1000)
         .remove();
 
     // Add new people at initial positions
@@ -413,7 +485,7 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
     // Transition to final position
     allPeople
         .transition()
-        .duration(5000)
+        .duration(1000)
         .attr("transform", d => {
             const studentData = studentTotals.get(d);
             const x = xScale(d) + xScale.bandwidth() / 2;
@@ -424,6 +496,46 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
             const studentNum = parseInt(d.replace('S', ''));
             drawPerson(d3.select(this), 0, 0, studentNum);
         });
+
+    // After drawing people, add invisible hitboxes
+    allPeople.each(function(student) {
+        const group = d3.select(this);
+        const studentData = studentTotals.get(student);
+        
+        // Calculate average BPM for selected exams
+        const studentBPMs = processedData.bpmMeans.get(student);
+        const selectedBPMs = Array.from(selectedExams)
+            .map(exam => studentBPMs.get(exam))
+            .filter(bpm => bpm !== undefined);
+        const avgBPM = d3.mean(selectedBPMs) || 0;
+
+        // Add invisible rectangle for tooltip
+        group.append("rect")
+            .attr("class", "person-hitbox")
+            .attr("x", -20)  // Slightly wider than the person
+            .attr("y", -40)  // Slightly higher than the person
+            .attr("width", 40)  // Cover the full width of person
+            .attr("height", 140)  // Cover the full height of person
+            .attr("fill", "transparent")  // Make it invisible
+            .style("pointer-events", "all")  // But still catch mouse events
+            .on("mouseover", function(event) {
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                tooltip.html(`Average BPM: ${avgBPM.toFixed(1)}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            })
+            .on("mousemove", function(event) {
+                tooltip.style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            });
+    });
 
     // Update axes with larger font and labels
     stackedSvg.selectAll(".axis").remove();
@@ -461,13 +573,45 @@ function updateStackedBarChart(studentTotals, sortedStudents) {
         .style("color", d => EXAM_COLORS[d]);
 }
 
-// Update scatter plot with animations and labels
+// Add these near the top with other global variables
+let statsHistory = {
+    highestR2: 0,
+    lowestR2: 1,
+    highestPValue: 0,
+    lowestPValue: 1
+};
+
+// Add the stats container after the sorting container
+const statsContainer = controlsContainer.append("div")
+    .attr("class", "control-group");
+
+statsContainer.append("div")
+    .attr("class", "control-label")
+    .text("Regression stats");
+
+const statsDiv = statsContainer
+    .append("div")
+    .attr("class", "stats-container");
+
+// Add the stats elements
+const currentStats = statsDiv.append("div")
+    .attr("class", "current-stats");
+currentStats.append("div").attr("class", "stat-item slope-stat");
+currentStats.append("div").attr("class", "stat-item r2-stat");
+currentStats.append("div").attr("class", "stat-item p-stat");
+
+const recordStats = statsDiv.append("div")
+    .attr("class", "record-stats");
+recordStats.append("div").attr("class", "stat-item r2-records");
+recordStats.append("div").attr("class", "stat-item p-records");
+
+// Update the updateScatterPlot function to include new statistics
 function updateScatterPlot(studentTotals, bpmMeans) {
     if (selectedExams.size === 0) {
         // Fade out only points and best fit line
         scatterSvg.selectAll(".point-group, .best-fit")
             .transition()
-            .duration(500)
+            .duration(1000)
             .style("opacity", 0);
         return;
     }
@@ -556,8 +700,8 @@ function updateScatterPlot(studentTotals, bpmMeans) {
     }
 
     // Transition axes
-    scatterSvg.select(".x-axis").transition().duration(2000).call(d3.axisBottom(xScale));
-    scatterSvg.select(".y-axis").transition().duration(2000).call(d3.axisLeft(yScale));
+    scatterSvg.select(".x-axis").transition().duration(1000).call(d3.axisBottom(xScale));
+    scatterSvg.select(".y-axis").transition().duration(1000).call(d3.axisLeft(yScale));
 
     // Update points and IQR ranges
     const points = scatterSvg.selectAll(".point-group")
@@ -609,61 +753,94 @@ function updateScatterPlot(studentTotals, bpmMeans) {
 
     // Transition the groups
     allPoints.transition()
-        .duration(2000)
+        .duration(1000)
         .attr("transform", d => `translate(${xScale(d.totalScore)},${yScale(d.avgBPM)})`);
 
     // Transition the IQR ranges
     allPoints.select(".bpm-range")
         .transition()
-        .duration(2000)
+        .duration(1000)
         .attr("x1", 0)
         .attr("x2", 0)
         .attr("y1", d => yScale(d.minBPM) - yScale(d.avgBPM))
         .attr("y2", d => yScale(d.maxBPM) - yScale(d.avgBPM));
 
-    // Update line of best fit
+    // Update regression statistics
     if (scatterData.length > 1) {
+        const n = scatterData.length;
+        const p = 1;  // one predictor
+        
         const xMean = d3.mean(scatterData, d => d.totalScore);
         const yMean = d3.mean(scatterData, d => d.avgBPM);
         const ssxy = d3.sum(scatterData, d => (d.totalScore - xMean) * (d.avgBPM - yMean));
         const ssxx = d3.sum(scatterData, d => (d.totalScore - xMean) * (d.totalScore - xMean));
+        const ssyy = d3.sum(scatterData, d => (d.avgBPM - yMean) * (d.avgBPM - yMean));
+        
         const slope = ssxy / ssxx;
-        const intercept = yMean - slope * xMean;
-
-        // Update slope tooltip
-        scatterSvg.selectAll(".slope-tooltip")
-            .data([1])
-            .join("text")
-            .attr("class", "slope-tooltip")
-            .attr("x", width - 10)
-            .attr("y", 20)
-            .attr("text-anchor", "end")
-            .style("font-size", "12px")
-            .text(`Slope: ${slope.toFixed(2)} BPM/point`);
-
+        const r2 = (ssxy * ssxy) / (ssxx * ssyy);
+        
+        // Calculate adjusted R²
+        const adjustedR2 = 1 - ((1 - r2) * (n - 1) / (n - p - 1));
+        
+        // Calculate p-value
+        const r = Math.sqrt(r2);
+        const t = r * Math.sqrt((n-2)/(1-r*r));
+        const pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(t), n-2));
+        
+        // Update historical values
+        statsHistory.highestR2 = Math.max(statsHistory.highestR2, adjustedR2);
+        statsHistory.lowestR2 = Math.min(statsHistory.lowestR2, adjustedR2);
+        statsHistory.highestPValue = Math.max(statsHistory.highestPValue, pValue);
+        statsHistory.lowestPValue = Math.min(statsHistory.lowestPValue, pValue);
+        
+        // Update stats display
+        currentStats.select(".slope-stat")
+            .html(`Slope: ${slope.toFixed(2)} BPM/point`);
+        currentStats.select(".r2-stat")
+            .html(`Adjusted R²: ${adjustedR2.toFixed(3)}`);
+        currentStats.select(".p-stat")
+            .html(`p-value: ${pValue.toFixed(3)}`);
+            
+        recordStats.select(".r2-records")
+            .html(`Highest Adj. R²: ${statsHistory.highestR2.toFixed(3)}<br>Lowest Adj. R²: ${statsHistory.lowestR2.toFixed(3)}`);
+        recordStats.select(".p-records")
+            .html(`Highest p-value: ${statsHistory.highestPValue.toFixed(3)}<br>Lowest p-value: ${statsHistory.lowestPValue.toFixed(3)}`);
+        
+        // Determine max x value based on number of selected exams
+        const maxScore = selectedExams.size * 100;
+        
+        // Add line of best fit with dynamic domain
         const lineData = [
-            { x: 0, y: intercept },
-            { x: 300, y: slope * 300 + intercept }
+            { x: 0, y: yMean - slope * xMean },
+            { x: maxScore, y: yMean + slope * (maxScore - xMean) }
         ];
 
-        // Update best fit line
+        // Update or create the best fit line
         const bestFitLine = scatterSvg.selectAll(".best-fit")
             .data([lineData]);
 
         bestFitLine.enter()
             .append("line")
             .attr("class", "best-fit")
+            .merge(bestFitLine)
             .style("stroke", "red")
             .style("stroke-width", 2)
-            .style("stroke-dasharray", "5,5")
-            .merge(bestFitLine)
+            .style("stroke-dasharray", "4,4")
             .transition()
-            .duration(2000)
+            .duration(1000)
             .attr("x1", d => xScale(d[0].x))
             .attr("y1", d => yScale(d[0].y))
             .attr("x2", d => xScale(d[1].x))
             .attr("y2", d => yScale(d[1].y));
+
+        bestFitLine.exit().remove();
+
+        const cohensD = (2 * r) / Math.sqrt(1 - r * r);
+        // Values > 0.8 are considered "large effects"
     }
+
+    // Remove the old slope tooltip
+    scatterSvg.selectAll(".slope-tooltip").remove();
 }
 
 // Add sorting function

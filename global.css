@@ -1,8 +1,8 @@
 body {
     font-family: 'Georama', system-ui, sans-serif;
     margin: 0;
-    padding: 20px;
-    min-height: 80vh;
+    padding: 10px 20px;
+    min-height: 75vh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -11,15 +11,22 @@ body {
 
 h1 {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
+}
+
+h3 {
+    font-weight: normal;
+    font-size: 1.3em;
+    margin-top: 5px;
+    margin-bottom: 15px;
 }
 
 .plot-container {
     display: flex;
     flex-direction: row;
-    gap: 10px;
+    gap: 5px;
     align-items: flex-start;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     transition: background-color 1s ease;
 }
 
@@ -272,7 +279,7 @@ rect.background {
     flex-direction: column;
     align-items: center;
     gap: 5px;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 
 .control-label {
@@ -291,12 +298,106 @@ rect.background {
     transition: all 1s linear !important;
 }
 
-/* Keep the specific radio label styling */
+/* Remove the immediate transition override for sorting labels */
 .sorting-container label {
-    transition: none !important;
     color: var(--text-color, black);
+}
+
+/* Add transition for radio buttons only */
+.sorting-container input[type="radio"] {
+    transition: none !important;
 }
 
 .dark-mode .sorting-container label {
     color: white;
+}
+
+/* Add styles for the stats container */
+.stats-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 12px;
+    background: var(--background-color, #ffffff);
+    border-radius: 8px;
+    margin: 5px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-width: 200px;
+}
+
+.current-stats, .record-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-item {
+    font-size: 14px;
+    color: var(--text-color, black);
+    transition: color 1s ease;
+}
+
+.dark-mode .stat-item {
+    color: white;
+}
+
+/* Add a subtle separator between current and record stats */
+.record-stats {
+    margin-top: 2px;
+    padding-top: 2px;
+    border-top: 1px solid var(--border-color, #ddd);
+}
+
+/* Add instruction text */
+.record-stats::before {
+    content: "Highest and lowest values you've seen so far:";
+    display: block;
+    font-size: 12px;
+    color: var(--text-color, #666);
+    margin-bottom: 4px;
+    font-style: italic;
+}
+
+.dark-mode .record-stats::before {
+    color: #aaa;
+}
+
+/* Update completion message styling */
+.completion-message {
+    margin-top: 10px;
+    max-width: 300px;  /* Reduced from 600px */
+}
+
+.completion-container {
+    background: var(--background-color, #ffffff);
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-size: 13px;  /* Slightly smaller font */
+}
+
+.reflection-questions {
+    line-height: 1.3;
+}
+
+.reflection-questions p {
+    margin: 5px 0;
+}
+
+.reflection-questions ul {
+    margin: 5px 0;
+    padding-left: 15px;
+}
+
+.reflection-questions li {
+    margin: 3px 0;
+    color: var(--text-color, #333);
+}
+
+.dark-mode .completion-container {
+    background: var(--background-color, #2d2d2d);
+}
+
+.dark-mode .reflection-questions li {
+    color: var(--text-color, #fff);
 }
