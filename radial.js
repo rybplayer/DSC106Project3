@@ -7,7 +7,7 @@ const width = 800 - margin1.left - margin1.right;
 const height = 400 - margin1.top - margin1.bottom;
 
 // Different margins for each plot
-const margin2 = { top: 20, right: 60, bottom: 60, left: 60 };   // For scatter plot
+const margin2 = { top: 0, right: 60, bottom: 60, left: 60 };   // For scatter plot
 
 // Create tooltip div
 const tooltip = d3.select("body").append("div")
@@ -804,6 +804,7 @@ function updateScatterPlot(studentTotals, bpmDataGrouped) {
 
     // Update regression statistics
     if (scatterData.length > 1) {
+        console.log(scatterData);
         const n = scatterData.length;
         const p = 1;  // one predictor
         
