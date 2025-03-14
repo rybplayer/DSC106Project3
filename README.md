@@ -41,6 +41,6 @@ From the start, we knew that we wanted to make a fun interaction to explore this
 
 ![Banner](https://github.com/rybplayer/DSC106Project3/blob/main/model/fig1_2.png)
 
-<br align='center'>Figure1: Initial EDA Plots</br>
+<b align='center'>Figure1: Initial EDA Plots</b>
 
 We went through 
