@@ -37,10 +37,10 @@ Our project aims to help viewers explore the relationship between BPM with exam 
 
 From the start, we knew that we wanted to make a fun interaction to explore this student-exam-bpm dataset. We knew we wanted to focus on BPM because it is strong correlated to stress, and stress is colloquially strongly correlated to exams. Furthermore, our Exploratory Data Analysis (EDA) revealed that the relationship was not as simple as it first appears.
 
-**Figure1: Initial EDA Plots**
-
 ![Banner](https://github.com/rybplayer/DSC106Project3/blob/main/model/fig1_1.png)
 
 ![Banner](https://github.com/rybplayer/DSC106Project3/blob/main/model/fig1_2.png)
+
+<p align='center'>**Figure1: Initial EDA Plots**</p>
 
 We went through 
